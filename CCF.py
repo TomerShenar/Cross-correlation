@@ -1,8 +1,12 @@
-# 1D Cross-correlation following Zucker+ 2003
+# 1D Cross-correlation following Zucker+ 2003 MNRAS, 342, 1291
 # Input: path to folder containing normalized spectra in fits format
 # Output: RVs_CCF.txt: FILENAME || JD || RV || error || S2N
 # Output: co-added spectrum in frame-of-reference of star.
-# Tomer Shenar; T.Shenar@uva.nl
+# Method described in: 
+# Zucker & Mazeh 1994, ApJ, 420, 806
+# Zucker+ 2003 MNRAS, 342, 1291
+# Shenar+ 2019, A&A, 627A, 151
+# Developer: Tomer Shenar, T.Shenar@uva.nl
 import matplotlib.pyplot as plt
 import glob
 import os
@@ -23,10 +27,11 @@ eps = 1E-10
 # Determines type of interpolation when reading spectra: should not be changed
 intr_kind = 'cubic'
 
-# What kind of observations to read?  If fits, then will try to read *fits file in given directory (below) 
-# If *txt, then will look for "phases.txt" file which contains all the dates...
+# What kind of observations to read?  If FITS, then will try to read *fits file in given directory (below) 
+# If TXT, then will look for "phases.txt" file which contains all the dates...
 
-WhatToRead = "FITS"
+#WhatToRead = "FITS"
+WhatToRead = "TXT"
 
 # Determines whether diagnostic plots are shown (first / all)
 PlotFirst = True
@@ -35,84 +40,7 @@ PlotAll = False
 # Determines the range in which a parable is fit to the CCF function.
 Fit_Range_in_fraction = 0.95
 
-# Absolute velocity shift of mask:
-vcalib = 0.
-
-linewidth = 15.
-
-# linelists:
-Ha = [6562.79 - linewidth, 6562.79 + linewidth]
-Hb = [4861.35 - linewidth, 4861.35 + linewidth]
-Hg = [4340.472 - linewidth, 4340.472 + linewidth]
-Hd = [4101.734 - linewidth, 4101.734 + linewidth]
-HeI4026 = [4026 - linewidth, 4026 + linewidth]
-HeI4121 = [4121 - linewidth, 4121 + linewidth]
-HeI4144 = [4144 - linewidth, 4144 + linewidth]
-HeI4388 = [4388 - linewidth, 4388 + linewidth]
-HeI4472 = [4472 - linewidth, 4472 + linewidth]
-HeI4713 = [4713 - linewidth, 4713 + linewidth]
-# HeI4921 = [4921 - linewidth, 4921 + linewidth]
-# HeI5015 = [5016 - linewidth, 5016 + linewidth]
-HeI5048 = [5048 - linewidth, 5048 + linewidth]
-HeI5876 = [5876 - linewidth, 5876 + linewidth]
-HeI6678 = [6678 - linewidth, 6678 + linewidth]
-# HeI7066 = [7066  - linewidth, 7066  + linewidth]
-OI7773 = [7773 - linewidth, 7773 + linewidth]
-# Not sure whether true:
-FeI_II7512 = [7512 - linewidth, 7512 + linewidth]
-FeI_II6345 = [6345 - linewidth, 6345 + linewidth]
-FeI_II6370 = [6370 - linewidth, 6370 + linewidth]
-FeI_II6385 = [6385 - linewidth, 6385 + linewidth]
-OI8446 = [8446 - linewidth, 8446 + linewidth]
-
-
-Balmer = [Hd, Hg, Hb, Ha]
-
-HeIlines = [  # HeI4026 ,
-    # HeI4121 ,
-    # HeI4144 ,
-    HeI4388,
-    HeI4472,
-    # HeI4713 ,
-    # HeI4921,
-    # HeI5015,
-    # HeI5048 ,
-    # HeI5876 ,
-    HeI6678]
-
-Emlines = [
-    FeI_II6345,
-    FeI_II6370,
-    FeI_II6385,
-    FeI_II7512,
-    OI7773,
-    OI8446]
-
-OEmlines = [
-    OI7773,
-    OI8446]
-
-
-# Region in which cross-correlation should occur ##
-# should be array of arrays: [ [lami_1, lamf_1], [lami_2, lamf_2], .... ]
-# for example: [ [4058, 5049], [5678, 5679] ]
-# CrossCorRangeA = [ [5870., 5881.] ]
-# CrossCorRangeA = [ [5778., 5784.] ]
-# CrossCorRangeA = [ [7767., 7785.] ]
-# CrossCorRangeA = [ [4920., 4925.] ]
-# CrossCorRangeA = [[4920., 4926.], [5870, 5882.],  [6672., 6686.] ]
-# CrossCorRangeA = [ [5870, 5882.] ]
-# CrossCorRangeA = [ [4382., 4396],  [4460., 4490.],  [6665., 6690.] ]
-# CrossCorRangeA = [ [4382., 4396]]
-# CrossCorRangeA = [ OI7773]
-# CrossCorRangeA = [ OI8446]
-# CrossCorRangeA = HeIlines
-# CrossCorRangeA = Emlines
-# CrossCorRangeA = OEmlines
-# CrossCorRangeA = Balmer
-#CrossCorRangeA = [Hg]
-
-CrossCorRangeA = [[5888., 5898.]]
+CrossCorRangeA = [[4000., 4500.]]
 
 # Minimum and maximum RVs to be searched
 CrossVeloMin = -400.
@@ -120,11 +48,11 @@ CrossVeloMax = 400.
 
 
 # Where to calculate S2N (not important for RV measurement)
-S2Nrange = [4500., 4505.]
+S2Nrange = [4450., 4455.]
 
 
 # Path to observations: Directory in which the spectra are found:
-PathToObservations = '/Users/tomer/Desktop/Work/Observations/KS_Per/HERMES/HD_30353/'
+PathToObservations = './'
 # PathToObservations = './'
 
 # Path to output: Directory in which output should be written:
@@ -133,8 +61,8 @@ PathToOutput = "./"
 # Mask path
 # MaskPath = (PathToObservations +
 #             '00956419_HRF_OBJ_ext_CosmicsRemoved_log_merged_cf_norm.fits')
-#MaskPath = PathToObservations + '00899898_HRF_OBJ_ext_CosmicsRemoved_log_merged_cf_rect.fits'
-MaskPath = PathToOutput + 'coadded.txt'
+MaskPath = PathToObservations + 'Atemp.txt'
+#MaskPath = PathToOutput + 'coadded.txt'
 
 # ***************************************
 # ********* END USER INPUT **************
@@ -250,8 +178,8 @@ def read_ascii(infile, col0=0, col1=1):
     AsciiFile = (pd.read_csv(infile, header=None, delim_whitespace=True, comment='#')).values
     #bla = np.loadtxt(infile)
     ##print bla
-    wave = wave[:,col0]
-    flux = wave[:,col1]
+    wave = AsciiFile[:,col0]
+    flux = AsciiFile[:,col1]
     return wave, flux
 
 
@@ -470,10 +398,6 @@ for i, spectrum in enumerate(Spectra):
         kind='cubic')(wavegridlog[CrossCorInds])
     CCFeval = crosscorreal(np.copy(fluxes - np.mean(fluxes)),
                            np.copy(Mask - np.mean(Mask)))
-    if i == 0 and 'coadded' in MaskPath:
-        vcalib = -  CCFeval[0]
-    # print(vcalib)
-    CCFeval = CCFeval + np.array([vcalib, 0])
     sigs.append(CCFeval[1])
     Vs.append(CCFeval[0])
     print('RV for ' + str(Observations[i]) + ': ' + str(CCFeval[0]) + ' +/- ' +
