@@ -1,6 +1,5 @@
 ##########################
-##########################
-##########################
+
 1D Cross-correlation following Zucker+ 2003 MNRAS, 342, 1291
 
 Input: path to folder containing normalized spectra in fits format
@@ -20,13 +19,12 @@ Zucker+ 2003 MNRAS, 342, 1291
 Shenar+ 2019, A&A, 627A, 151
 
 Developer: Tomer Shenar, T.Shenar@uva.nl
-##########################
-##########################
-##########################
 
 ##########################
+
 Important note:
-##########################
+
+
 The script can either read fits files or txt files (set by the user under "WhatToRead" variable)
 
 If fits: all fits files in "PathToObservations" are read;  dates are read from header
@@ -41,7 +39,9 @@ etc...
 
 
 ##########################
+
 User-adjustable variables:
+
 ##########################
 
 intr_kind (str; interpolation type: linear, cubic, etc... default cubic)
@@ -69,7 +69,9 @@ PathToOutput (str; where output should be stored)
 MaskPath (str; where template [or mask] is stored).
 
 ########
+
 Example:
+
 ########
 
 Download the available CCF.py script, the make_spectra_SB2.py script, and the two TLUSTY model atmospheres provided here (source: http://tlusty.oca.eu/)
