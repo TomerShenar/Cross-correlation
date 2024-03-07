@@ -18,7 +18,7 @@ Zucker+ 2003 MNRAS, 342, 1291
 
 Shenar+ 2019, A&A, 627A, 151
 
-Developer: Tomer Shenar, T.Shenar@uva.nl
+Developer: Tomer Shenar, tshenar@tau.ac.il
 
 ##########################
 
