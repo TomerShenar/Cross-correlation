@@ -40,6 +40,9 @@ PlotAll = False
 # Determines the range in which a parable is fit to the CCF function.
 Fit_Range_in_fraction = 0.95
 
+# Oversample wavelength grid (helpful for low-res spectra). Default: OverSampleFac = 1 (=No), else: set value (recommended ~5-10)
+OverSampleFac = 1
+
 CrossCorRangeA = [[4000., 4500.]]
 
 # Minimum and maximum RVs to be searched
@@ -52,7 +55,7 @@ S2Nrange = [4450., 4455.]
 
 
 # Path to observations: Directory in which the spectra are found:
-PathToObservations = './'
+PathToObservations = './obs/'
 # PathToObservations = './'
 
 # Path to output: Directory in which output should be written:
@@ -141,7 +144,7 @@ def crosscorreal(Observation, Mask):
         return np.nan, np.nan
 
     CFFdvdvAtMax = 2*a
-    return np.array([vmax, np.sqrt(-1./(N * CFFdvdvAtMax *
+    return np.array([vmax, np.sqrt(-1./(NRes * CFFdvdvAtMax *
                                         CCFAtMax / (1 - CCFAtMax**2)))])
 
 
@@ -353,6 +356,8 @@ for i, observation in ObsArray:
         S2Ns = [1/(np.std(spectrum[:, 1][S2N]))]
         Spectra = [spectrum]
 
+print("Preparing wavelength and velocity grids...")
+
 LambdaRangeUser = CrossCorRangeA * \
     np.array([1. - 1.1*CrossVeloMax/clight, 1 - 1.1*CrossVeloMin/clight])
 LamRangeB = LambdaRangeUser[0, 0]
@@ -360,9 +365,10 @@ LamRangeR = LambdaRangeUser[-1, 1]
 Dlam = Spectra[0][1, 0] - Spectra[0][0, 0]
 Resolution = Spectra[0][1, 0]/Dlam
 
-vbin = clight / Resolution
+#For N in error formula (NRes):
 
-wavegrid = np.arange(LamRangeB, LamRangeR, Dlam)
+vbin = clight / Resolution 
+
 Nwaves = int(np.log(LamRangeR/LamRangeB) / np.log(1. + vbin/clight))
 wavegridlog = LamRangeB*(1. + vbin/clight)**np.arange(Nwaves)
 
@@ -373,7 +379,29 @@ IntFs = np.array([np.argmin(np.abs(wavegridlog - CrossCorRangeA[i][1]))
                   for i in np.arange(len(CrossCorRangeA))])
 
 Ns = IntFs - IntIs
-N = np.sum(Ns)
+NRes = np.sum(Ns)
+
+
+if OverSampleFac == 1:
+# N = number of grid points
+    N = NRes
+else:
+#If oversample: redefine grids...
+    print("Oversampling grids by factor ", OverSampleFac)
+    vbin = clight / Resolution / OverSampleFac
+
+    Nwaves = int(np.log(LamRangeR/LamRangeB) / np.log(1. + vbin/clight))
+    wavegridlog = LamRangeB*(1. + vbin/clight)**np.arange(Nwaves)
+
+
+    IntIs = np.array([np.argmin(np.abs(wavegridlog - CrossCorRangeA[i][0]))
+                    for i in np.arange(len(CrossCorRangeA))])
+    IntFs = np.array([np.argmin(np.abs(wavegridlog - CrossCorRangeA[i][1]))
+                    for i in np.arange(len(CrossCorRangeA))])
+
+    Ns = IntFs - IntIs
+    N = np.sum(Ns)
+
 
 sRange = np.arange(int(CrossVeloMin/vbin), int(CrossVeloMax/vbin)+1, 1)
 veloRange = vbin*sRange
@@ -383,10 +411,14 @@ CrossCorInds = np.concatenate(([np.arange(IntIs[i], IntFs[i])
 Observations, Dates = np.array(Observations), np.array(Dates)
 sort = np.argsort(Dates)
 
+
+print("Reading masks...")
+
 MaskAll = read_file(MaskPath)
 Mask = interp1d(MaskAll[:,0], np.nan_to_num(MaskAll[:,1]), bounds_error=False,
                 fill_value=1., kind=intr_kind)(wavegridlog)
 
+print("Measuring RVs...")
 
 Vs = []
 sigs = []
